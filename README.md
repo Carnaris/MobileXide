@@ -14,9 +14,9 @@ webImport("ui/main")
 # Hydroxide
 <i>Lua runtime introspection and network capturing tool for games on the Roblox engine.</i>
 
-~~Report issues to our Discord server: https://discord.gg/DJxBwAX~~
 
-<ins>New Discord server will be established when the next major release is ready for use</ins>
+There are no plans to create any Discord Server for this fork.
+
 
 <p align="center">
     <img src="https://cdn.discordapp.com/attachments/633472429917995038/722143730500501534/Hydroxide_Logo.png"/>
