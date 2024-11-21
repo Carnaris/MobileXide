@@ -222,7 +222,7 @@ if readFile and writeFile then
                 assets = { game:GetObjects(asset)[1] }
             elseif web then
                 if readFile and writeFile then
-                    local file = (hasFolderFunctions and "MobileXide/user/" .. user .. '/' .. asset .. ".lua") or ("hydroxide-" .. user .. '-' .. asset:gsub('/', '-') .. ".lua")
+                    local file = (hasFolderFunctions and "MobileXide/user/" .. user .. '/' .. asset .. ".lua") or ("MobileXide-" .. user .. '-' .. asset:gsub('/', '-') .. ".lua")
                     local content
 
                     if (isFile and not isFile(file)) or not importCache[asset] then
