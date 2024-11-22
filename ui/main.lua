@@ -1,7 +1,6 @@
 local CoreGui = game:GetService("CoreGui")
 local UserInput = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
 
 local Interface = import("rbxassetid://11389137937")
 
@@ -19,24 +18,52 @@ local ModuleScanner
 local UpvalueScanner
 local ConstantScanner
 
-xpcall(function()
-    RemoteSpy = import("ui/modules/RemoteSpy")
-    ClosureSpy = import("ui/modules/ClosureSpy")
-    ScriptScanner = import("ui/modules/ScriptScanner")
-    ModuleScanner = import("ui/modules/ModuleScanner")
-    UpvalueScanner = import("ui/modules/UpvalueScanner")
-    ConstantScanner = import("ui/modules/ConstantScanner")
-end, function(err)
-    local message
-    if err:find("valid member") then
-        message = "The UI has updated, please rejoin and restart. If you get this message more than once, screenshot this message and report it in the Hydroxide server.\n\n" .. err
-    else
-        message = "Report this error in Hydroxide's server:\n\n" .. err
-    end
+getgenv().touchPoints = {}
+getgenv().touching = {}
+getgenv().conduct = 0
+getgenv().pressHold = false
+getgenv().mainBase = Interface.Base
+mainBase.Active = true
 
-    MessageBox.Show("An error has occurred", message, MessageType.OK, function()
-        Interface:Destroy() 
-    end)
+getgenv().MouseInFrame = function(uiobject)
+    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+    local y_cond = uiobject.AbsolutePosition.Y <= mouse.Y and mouse.Y <= uiobject.AbsolutePosition.Y + uiobject.AbsoluteSize.Y
+    local x_cond = uiobject.AbsolutePosition.X <= mouse.X and mouse.X <= uiobject.AbsolutePosition.X + uiobject.AbsoluteSize.X
+
+    return (y_cond and x_cond)
+end
+
+if signaluis then
+    signaluis:Disconnect()
+end
+
+getgenv().signaluis = UserInput.InputBegan:Connect(function(input, gp)
+    if (input.UserInputType == Enum.UserInputType.Touch) then
+        conduct += 1
+        local key, Signal = conduct, true
+        touchPoints[key] = input.Position
+        local startClock = os.clock()
+        task.spawn(function()
+            local threshold = 0.4
+            repeat task.wait() until (os.clock() - startClock) > threshold or not Signal
+            if (os.clock() - startClock) < threshold then return end
+            pressHold = true
+        end)
+        Signal = UserInput.InputEnded:Connect(function()
+            for i, v in pairs(touching) do
+                if v == true then
+                    -- print(i, v)
+                end
+                touching[i] = false
+            end
+            touchPoints[key] = nil
+            conduct -= 1
+            Signal:Disconnect()
+            Signal = nil
+            task.wait()
+            pressHold = false
+        end)
+    end
 end)
 
 local constants = {
@@ -48,8 +75,9 @@ local constants = {
 
 local Open = Interface.Open
 local Base = Interface.Base
+local Drag = Base.Drag
 local Status = Base.Status
-local Collapse = Base:FindFirstChild("Collapse")
+local Collapse = Drag:FindFirstChild("Collapse") or Base:FindFirstChild("Collapse")
 
 function oh.setStatus(text)
     Status.Text = '• Status: ' .. text
@@ -59,66 +87,52 @@ function oh.getStatus()
     return Status.Text:gsub('• Status: ', '')
 end
 
-Open.TouchTap:Connect(function()
+local dragging, dragStart, startPos
+
+Drag.InputBegan:Connect(function(input)
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch and conduct == 0) then
+        local dragEnded
+
+        dragging = true
+        dragStart = input.Position
+        startPos = Base.Position
+
+        dragEnded = input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+                dragEnded:Disconnect()
+            end
+        end)
+    end
+end)
+
+UserInput.InputChanged:Connect(function(input)
+    if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and dragging then
+        local delta = input.Position - dragStart
+        Base.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+Open.MouseButton1Click:Connect(function()
     Open:TweenPosition(constants.conceal, "Out", "Quad", 0.15)
     Base:TweenPosition(constants.opened, "Out", "Quad", 0.15)
 end)
 
 if Collapse then
-    Collapse.TouchTap:Connect(function()
+    Collapse.MouseButton1Click:Connect(function()
         Base:TweenPosition(constants.closed, "Out", "Quad", 0.15)
         Open:TweenPosition(constants.reveal, "Out", "Quad", 0.15)
     end)
 else
-    warn("Collapse button not found in Base. Skipping Collapse functionality.")
-end
-
-local function addLongPressToItem(item)
-    local longPressDuration = 0.5
-    local isLongPressing = false
-    local longPressConnection
-
-    item.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            isLongPressing = true
-
-            longPressConnection = RunService.Heartbeat:Connect(function(deltaTime)
-                if isLongPressing then
-                    longPressDuration = longPressDuration - deltaTime
-                    if longPressDuration <= 0 then
-                        -- Показываем сообщение о дополнительных функциях (аналог контекстного меню)
-                        MessageBox.Show("Дополнительные функции", "Выберите действие для этого элемента.", MessageType.OK)
-                        isLongPressing = false
-                        longPressConnection:Disconnect()
-                    end
-                end
-            end)
-        end
-    end)
-
-    item.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            isLongPressing = false
-            longPressDuration = 0.5
-            if longPressConnection then
-                longPressConnection:Disconnect()
-            end
-        end
-    end)
-end
-
-for _, item in pairs(Base:GetDescendants()) do
-    if item:IsA("TextButton") then
-        addLongPressToItem(item)
-    end
+    warn("Collapse button not found in Drag or Base. Skipping Collapse functionality.")
 end
 
 Interface.Name = HttpService:GenerateGUID(false)
 if getHui then
-    Interface.Parent = getHui()
+    Interface.Parent = CoreGui or getHui()
 else
     if syn then
-        syn.protect_gui(Interface)
+        -- syn.protect_gui(Interface)
     end
 
     Interface.Parent = CoreGui
