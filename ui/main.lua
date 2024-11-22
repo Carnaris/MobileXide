@@ -121,7 +121,7 @@ Drag.InputBegan:Connect(function(input)
                 longPressDuration = longPressDuration - deltaTime
                 if longPressDuration <= 0 then
                     -- Выполняем действия для долгого нажатия
-                    MessageBox.Show("Дополнительные функции", "Вы выполнили долгое нажатие!", MessageType.OK)
+                    error("This is a deliberate error for testing purposes")
                     isLongPressing = false
                     longPressConnection:Disconnect()
                 end
