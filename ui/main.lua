@@ -50,18 +50,6 @@ local Open = Interface.Open
 local Base = Interface.Base
 local Status = Base.Status
 
--- Добавляем кнопку закрытия интерфейса
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 100, 0, 30)
-CloseButton.Position = UDim2.new(1, -110, 0, 10)
-CloseButton.Text = "Закрыть"
-CloseButton.Parent = Base
-
-CloseButton.MouseButton1Click:Connect(function()
-    Base:TweenPosition(constants.closed, "Out", "Quad", 0.15)
-    Open:TweenPosition(constants.reveal, "Out", "Quad", 0.15)
-end)
-
 function oh.setStatus(text)
     Status.Text = '• Status: ' .. text
 end
@@ -75,38 +63,46 @@ Open.TouchTap:Connect(function()
     Base:TweenPosition(constants.opened, "Out", "Quad", 0.15)
 end)
 
--- Добавляем поддержку долгого нажатия для мобильных устройств
-local longPressDuration = 0.5  -- Длительность долгого нажатия в секундах
-local isLongPressing = false
-local longPressConnection
+local function addLongPressToItem(item)
+    local longPressDuration = 0.5
+    local isLongPressing = false
+    local longPressConnection
 
-Base.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        isLongPressing = true
+    item.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            isLongPressing = true
 
-        longPressConnection = RunService.Heartbeat:Connect(function(deltaTime)
-            if isLongPressing then
-                longPressDuration = longPressDuration - deltaTime
-                if longPressDuration <= 0 then
-                    -- Выполняем действия для долгого нажатия
-                    MessageBox.Show("Дополнительные функции", "Вы выполнили долгое нажатие!", MessageType.OK)
-                    isLongPressing = false
-                    longPressConnection:Disconnect()
+            longPressConnection = RunService.Heartbeat:Connect(function(deltaTime)
+                if isLongPressing then
+                    longPressDuration = longPressDuration - deltaTime
+                    if longPressDuration <= 0 then
+                        -- Показываем сообщение о дополнительных функциях (аналог контекстного меню)
+                        MessageBox.Show("Дополнительные функции", "Выберите действие для этого элемента.", MessageType.OK)
+                        isLongPressing = false
+                        longPressConnection:Disconnect()
+                    end
                 end
-            end
-        end)
-    end
-end)
-
-Base.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        isLongPressing = false
-        longPressDuration = 0.5  -- Сброс длительности нажатия
-        if longPressConnection then
-            longPressConnection:Disconnect()
+            end)
         end
+    end)
+
+    item.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            isLongPressing = false
+            longPressDuration = 0.5
+            if longPressConnection then
+                longPressConnection:Disconnect()
+            end
+        end
+    end)
+end
+
+-- Добавляем долгий тап для всех элементов списка
+for _, item in pairs(Base:GetDescendants()) do
+    if item:IsA("TextButton") then
+        addLongPressToItem(item)
     end
-end)
+end
 
 Interface.Name = HttpService:GenerateGUID(false)
 if getHui then
