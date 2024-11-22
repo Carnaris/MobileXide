@@ -74,8 +74,8 @@ local longPressDuration = 0.5  -- Длительность долгого наж
 local isLongPressing = false
 local longPressConnection
 
-Base.TouchLongPress:Connect(function(touchPositions, state)
-    if state == Enum.UserInputState.Begin then
+Base.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
         isLongPressing = true
 
         longPressConnection = RunService.Heartbeat:Connect(function(deltaTime)
@@ -89,7 +89,11 @@ Base.TouchLongPress:Connect(function(touchPositions, state)
                 end
             end
         end)
-    elseif state == Enum.UserInputState.End then
+    end
+end)
+
+Base.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
         isLongPressing = false
         longPressDuration = 0.5  -- Сброс длительности нажатия
         if longPressConnection then
