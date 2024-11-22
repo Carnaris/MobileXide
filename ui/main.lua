@@ -49,19 +49,23 @@ getgenv().signaluis = UserInput.InputBegan:Connect(function(input, gp)
             if (os.clock() - startClock) < threshold then return end
             pressHold = true
         end)
-        Signal = UserInput.InputEnded:Connect(function()
-            for i, v in pairs(touching) do
-                if v == true then
-                    -- print(i, v)
+
+        -- Условие для InputEnded, чтобы не мешать другим элементам интерфейса
+        Signal = UserInput.InputEnded:Connect(function(endInput)
+            if endInput.UserInputType == Enum.UserInputType.Touch and touchPoints[key] then
+                for i, v in pairs(touching) do
+                    if v == true then
+                        -- print(i, v)
+                    end
+                    touching[i] = false
                 end
-                touching[i] = false
+                touchPoints[key] = nil
+                conduct -= 1
+                Signal:Disconnect()
+                Signal = nil
+                task.wait()
+                pressHold = false
             end
-            touchPoints[key] = nil
-            conduct -= 1
-            Signal:Disconnect()
-            Signal = nil
-            task.wait()
-            pressHold = false
         end)
     end
 end)
