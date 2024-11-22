@@ -1,4 +1,4 @@
-local CoreGui = game:GetService("CoreGui")
+local CoreGui = game:GetService("InvalidService")  -- Нарочно указано неверное имя сервиса, чтобы вызвать ошибку
 local UserInput = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 
