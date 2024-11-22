@@ -107,39 +107,37 @@ Collapse.MouseButton1Click:Connect(function()
     Open:TweenPosition(constants.reveal, "Out", "Quad", 0.15)
 end)
 
--- Добавляем поддержку долгого нажатия для мобильных устройств
-UserInput.TouchLongPress:Connect(function(touchPositions, state)
-    if state == Enum.UserInputState.Begin then
-        -- Обрабатываем удержание кнопки для открытия дополнительных функций
-        if #touchPositions == 1 then
-            local touch = touchPositions[1]
-            if touch and Open and Open.AbsolutePosition and Open.AbsoluteSize then
-                local withinButton = (touch.X >= Open.AbsolutePosition.X and touch.X <= Open.AbsolutePosition.X + Open.AbsoluteSize.X) and
-                                     (touch.Y >= Open.AbsolutePosition.Y and touch.Y <= Open.AbsolutePosition.Y + Open.AbsoluteSize.Y)
-                if withinButton then
-                    -- Выполняем действия, аналогичные правому клику
-                    MessageBox.Show("Дополнительные функции", "Здесь можно открыть дополнительные функции.", MessageType.OK)
+-- Добавляем поддержку долгого нажатия для мобильных устройств и мыши
+local longPressDuration = 0.5  -- Длительность долгого нажатия в секундах
+local isLongPressing = false
+local longPressConnection
+
+Drag.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isLongPressing = true
+
+        longPressConnection = game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
+            if isLongPressing then
+                longPressDuration = longPressDuration - deltaTime
+                if longPressDuration <= 0 then
+                    -- Выполняем действия для долгого нажатия
+                    MessageBox.Show("Дополнительные функции", "Вы выполнили долгое нажатие!", MessageType.OK)
+                    isLongPressing = false
+                    longPressConnection:Disconnect()
                 end
             end
-        end
+        end)
     end
 end)
 
--- Добавляем поддержку двойного нажатия
-local lastClickTime = 0
-local doubleClickThreshold = 0.3  -- Время (в секундах) между двойными нажатиями
-
-Open.MouseButton1Click:Connect(function()
-    local currentTime = tick()
-    if currentTime - lastClickTime <= doubleClickThreshold then
-        -- Выполнить действие для двойного нажатия
-        MessageBox.Show("Двойное нажатие", "Вы выполнили двойное нажатие!", MessageType.OK)
-    else
-        -- Выполнить обычное действие
-        Open:TweenPosition(constants.conceal, "Out", "Quad", 0.15)
-        Base:TweenPosition(constants.opened, "Out", "Quad", 0.15)
+Drag.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isLongPressing = false
+        longPressDuration = 0.5  -- Сброс длительности нажатия
+        if longPressConnection then
+            longPressConnection:Disconnect()
+        end
     end
-    lastClickTime = currentTime
 end)
 
 Interface.Name = HttpService:GenerateGUID(false)
