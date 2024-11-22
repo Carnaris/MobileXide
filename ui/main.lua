@@ -49,6 +49,7 @@ local constants = {
 local Open = Interface.Open
 local Base = Interface.Base
 local Status = Base.Status
+local Collapse = Base:FindFirstChild("Collapse")
 
 function oh.setStatus(text)
     Status.Text = '• Status: ' .. text
@@ -62,6 +63,15 @@ Open.TouchTap:Connect(function()
     Open:TweenPosition(constants.conceal, "Out", "Quad", 0.15)
     Base:TweenPosition(constants.opened, "Out", "Quad", 0.15)
 end)
+
+if Collapse then
+    Collapse.TouchTap:Connect(function()
+        Base:TweenPosition(constants.closed, "Out", "Quad", 0.15)
+        Open:TweenPosition(constants.reveal, "Out", "Quad", 0.15)
+    end)
+else
+    warn("Collapse button not found in Base. Skipping Collapse functionality.")
+end
 
 local function addLongPressToItem(item)
     local longPressDuration = 0.5
@@ -97,7 +107,6 @@ local function addLongPressToItem(item)
     end)
 end
 
--- Добавляем долгий тап для всех элементов списка
 for _, item in pairs(Base:GetDescendants()) do
     if item:IsA("TextButton") then
         addLongPressToItem(item)
