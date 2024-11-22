@@ -78,14 +78,16 @@ local function beginDrag(input)
 end
 
 -- Поддержка начала перетаскивания с использованием сенсорного экрана
-Drag.TouchTap:Connect(function(input)
-    beginDrag(input)
+Drag.TouchLongPress:Connect(function(touchPositions, state)
+    if state == Enum.UserInputState.Begin then
+        beginDrag(touchPositions[1])
+    end
 end)
 
 -- Функция для обработки изменения позиции при перетаскивании
-oh.Events.Drag = UserInput.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch and dragging then
-        local delta = input.Position - dragStart
+oh.Events.Drag = UserInput.TouchMoved:Connect(function(touch)
+    if dragging then
+        local delta = touch.Position - dragStart
         Base.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
@@ -105,8 +107,8 @@ local longPressDuration = 0.5  -- Длительность долгого наж
 local isLongPressing = false
 local longPressConnection
 
-Drag.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
+Drag.TouchLongPress:Connect(function(touchPositions, state)
+    if state == Enum.UserInputState.Begin then
         isLongPressing = true
 
         longPressConnection = game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
@@ -120,11 +122,7 @@ Drag.InputBegan:Connect(function(input)
                 end
             end
         end)
-    end
-end)
-
-Drag.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
+    elseif state == Enum.UserInputState.End then
         isLongPressing = false
         longPressDuration = 0.5  -- Сброс длительности нажатия
         if longPressConnection then
