@@ -48,9 +48,8 @@ local constants = {
 
 local Open = Interface.Open
 local Base = Interface.Base
-local Drag = Base.Drag
 local Status = Base.Status
-local Collapse = Drag.Collapse
+local Collapse = Base.Collapse
 
 function oh.setStatus(text)
     Status.Text = '• Status: ' .. text
@@ -59,39 +58,6 @@ end
 function oh.getStatus()
     return Status.Text:gsub('• Status: ', '')
 end
-
-local dragging
-local dragStart
-local startPos
-
--- Функция для обработки начала перетаскивания
-local function beginDrag(input)
-    dragging = true
-    dragStart = input.Position
-    startPos = Base.Position
-
-    local dragEnded = input.Changed:Connect(function()
-        if input.UserInputState == Enum.UserInputState.End then
-            dragging = false
-            dragEnded:Disconnect()
-        end
-    end)
-end
-
--- Поддержка начала перетаскивания с использованием сенсорного экрана
-Drag.TouchBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        beginDrag(input)
-    end
-end)
-
--- Функция для обработки изменения позиции при перетаскивании
-oh.Events.Drag = UserInput.TouchMoved:Connect(function(touch)
-    if dragging then
-        local delta = touch.Position - dragStart
-        Base.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
 
 Open.TouchTap:Connect(function()
     Open:TweenPosition(constants.conceal, "Out", "Quad", 0.15)
@@ -108,7 +74,7 @@ local longPressDuration = 0.5  -- Длительность долгого наж
 local isLongPressing = false
 local longPressConnection
 
-Drag.TouchLongPress:Connect(function(touchPositions, state)
+Base.TouchLongPress:Connect(function(touchPositions, state)
     if state == Enum.UserInputState.Begin then
         isLongPressing = true
 
