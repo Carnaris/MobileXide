@@ -1,4 +1,4 @@
-local CoreGui = game:GetService("InvalidService")  -- Нарочно указано неверное имя сервиса, чтобы вызвать ошибку
+local CoreGui = game:GetService("CoreGui")
 local UserInput = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 
@@ -77,13 +77,6 @@ local function beginDrag(input)
     end)
 end
 
--- Поддержка начала перетаскивания с использованием мыши
-Drag.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        beginDrag(input)
-    end
-end)
-
 -- Поддержка начала перетаскивания с использованием сенсорного экрана
 Drag.TouchTap:Connect(function(input)
     beginDrag(input)
@@ -91,29 +84,29 @@ end)
 
 -- Функция для обработки изменения позиции при перетаскивании
 oh.Events.Drag = UserInput.InputChanged:Connect(function(input)
-    if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and dragging then
+    if input.UserInputType == Enum.UserInputType.Touch and dragging then
         local delta = input.Position - dragStart
         Base.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
 
-Open.MouseButton1Click:Connect(function()
+Open.TouchTap:Connect(function()
     Open:TweenPosition(constants.conceal, "Out", "Quad", 0.15)
     Base:TweenPosition(constants.opened, "Out", "Quad", 0.15)
 end)
 
-Collapse.MouseButton1Click:Connect(function()
+Collapse.TouchTap:Connect(function()
     Base:TweenPosition(constants.closed, "Out", "Quad", 0.15)
     Open:TweenPosition(constants.reveal, "Out", "Quad", 0.15)
 end)
 
--- Добавляем поддержку долгого нажатия для мобильных устройств и мыши
+-- Добавляем поддержку долгого нажатия для мобильных устройств
 local longPressDuration = 0.5  -- Длительность долгого нажатия в секундах
 local isLongPressing = false
 local longPressConnection
 
 Drag.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.Touch then
         isLongPressing = true
 
         longPressConnection = game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
@@ -121,7 +114,7 @@ Drag.InputBegan:Connect(function(input)
                 longPressDuration = longPressDuration - deltaTime
                 if longPressDuration <= 0 then
                     -- Выполняем действия для долгого нажатия
-                    error("This is a deliberate error for testing purposes")
+                    MessageBox.Show("Дополнительные функции", "Вы выполнили долгое нажатие!", MessageType.OK)
                     isLongPressing = false
                     longPressConnection:Disconnect()
                 end
@@ -131,7 +124,7 @@ Drag.InputBegan:Connect(function(input)
 end)
 
 Drag.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.Touch then
         isLongPressing = false
         longPressDuration = 0.5  -- Сброс длительности нажатия
         if longPressConnection then
