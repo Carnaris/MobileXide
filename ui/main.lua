@@ -103,49 +103,10 @@ Collapse.TouchTap:Connect(function()
     Open:TweenPosition(constants.reveal, "Out", "Quad", 0.15)
 end)
 
--- Добавляем поддержку долгого нажатия для мобильных устройств с контекстным меню
+-- Добавляем поддержку долгого нажатия для мобильных устройств
 local longPressDuration = 0.5  -- Длительность долгого нажатия в секундах
 local isLongPressing = false
 local longPressConnection
-
-local function showContextMenu(position)
-    local contextMenu = Instance.new("Frame")
-    contextMenu.Size = UDim2.new(0, 150, 0, 100)
-    contextMenu.Position = UDim2.new(0, position.X, 0, position.Y)
-    contextMenu.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    contextMenu.BorderSizePixel = 2
-    contextMenu.BorderColor3 = Color3.fromRGB(255, 255, 255)
-    contextMenu.Parent = CoreGui
-
-    local button1 = Instance.new("TextButton")
-    button1.Size = UDim2.new(1, -10, 0, 30)
-    button1.Position = UDim2.new(0, 5, 0, 5)
-    button1.Text = "Option 1"
-    button1.Parent = contextMenu
-    button1.MouseButton1Click:Connect(function()
-        MessageBox.Show("Option 1", "Вы выбрали Опцию 1", MessageType.OK)
-        contextMenu:Destroy()
-    end)
-
-    local button2 = Instance.new("TextButton")
-    button2.Size = UDim2.new(1, -10, 0, 30)
-    button2.Position = UDim2.new(0, 5, 0, 40)
-    button2.Text = "Option 2"
-    button2.Parent = contextMenu
-    button2.MouseButton1Click:Connect(function()
-        MessageBox.Show("Option 2", "Вы выбрали Опцию 2", MessageType.OK)
-        contextMenu:Destroy()
-    end)
-
-    local closeButton = Instance.new("TextButton")
-    closeButton.Size = UDim2.new(1, -10, 0, 30)
-    closeButton.Position = UDim2.new(0, 5, 0, 75)
-    closeButton.Text = "Close"
-    closeButton.Parent = contextMenu
-    closeButton.MouseButton1Click:Connect(function()
-        contextMenu:Destroy()
-    end)
-end
 
 Drag.TouchLongPress:Connect(function(touchPositions, state)
     if state == Enum.UserInputState.Begin then
@@ -155,8 +116,8 @@ Drag.TouchLongPress:Connect(function(touchPositions, state)
             if isLongPressing then
                 longPressDuration = longPressDuration - deltaTime
                 if longPressDuration <= 0 then
-                    -- Показываем контекстное меню
-                    showContextMenu(touchPositions[1].Position)
+                    -- Выполняем действия для долгого нажатия
+                    MessageBox.Show("Дополнительные функции", "Вы выполнили долгое нажатие!", MessageType.OK)
                     isLongPressing = false
                     longPressConnection:Disconnect()
                 end
