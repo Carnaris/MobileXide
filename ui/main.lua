@@ -49,7 +49,18 @@ local constants = {
 local Open = Interface.Open
 local Base = Interface.Base
 local Status = Base.Status
-local Collapse = Base:FindFirstChild("Collapse") -- Изменено на FindFirstChild для проверки существования объекта
+
+-- Добавляем кнопку закрытия интерфейса
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 100, 0, 30)
+CloseButton.Position = UDim2.new(1, -110, 0, 10)
+CloseButton.Text = "Закрыть"
+CloseButton.Parent = Base
+
+CloseButton.MouseButton1Click:Connect(function()
+    Base:TweenPosition(constants.closed, "Out", "Quad", 0.15)
+    Open:TweenPosition(constants.reveal, "Out", "Quad", 0.15)
+end)
 
 function oh.setStatus(text)
     Status.Text = '• Status: ' .. text
@@ -63,15 +74,6 @@ Open.TouchTap:Connect(function()
     Open:TweenPosition(constants.conceal, "Out", "Quad", 0.15)
     Base:TweenPosition(constants.opened, "Out", "Quad", 0.15)
 end)
-
-if Collapse then
-    Collapse.TouchTap:Connect(function()
-        Base:TweenPosition(constants.closed, "Out", "Quad", 0.15)
-        Open:TweenPosition(constants.reveal, "Out", "Quad", 0.15)
-    end)
-else
-    warn("Collapse button not found in Base. Skipping Collapse functionality.")
-end
 
 -- Добавляем поддержку долгого нажатия для мобильных устройств
 local longPressDuration = 0.5  -- Длительность долгого нажатия в секундах
