@@ -49,7 +49,7 @@ local constants = {
 local Open = Interface.Open
 local Base = Interface.Base
 local Status = Base.Status
-local Collapse = Base.Collapse
+local Collapse = Base:FindFirstChild("Collapse") -- Изменено на FindFirstChild для проверки существования объекта
 
 function oh.setStatus(text)
     Status.Text = '• Status: ' .. text
@@ -64,10 +64,14 @@ Open.TouchTap:Connect(function()
     Base:TweenPosition(constants.opened, "Out", "Quad", 0.15)
 end)
 
-Collapse.TouchTap:Connect(function()
-    Base:TweenPosition(constants.closed, "Out", "Quad", 0.15)
-    Open:TweenPosition(constants.reveal, "Out", "Quad", 0.15)
-end)
+if Collapse then
+    Collapse.TouchTap:Connect(function()
+        Base:TweenPosition(constants.closed, "Out", "Quad", 0.15)
+        Open:TweenPosition(constants.reveal, "Out", "Quad", 0.15)
+    end)
+else
+    warn("Collapse button not found in Base. Skipping Collapse functionality.")
+end
 
 -- Добавляем поддержку долгого нажатия для мобильных устройств
 local longPressDuration = 0.5  -- Длительность долгого нажатия в секундах
