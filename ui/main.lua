@@ -18,24 +18,52 @@ local ModuleScanner
 local UpvalueScanner
 local ConstantScanner
 
-xpcall(function()
-    RemoteSpy = import("ui/modules/RemoteSpy")
-    ClosureSpy = import("ui/modules/ClosureSpy")
-    ScriptScanner = import("ui/modules/ScriptScanner")
-    ModuleScanner = import("ui/modules/ModuleScanner")
-    UpvalueScanner = import("ui/modules/UpvalueScanner")
-    ConstantScanner = import("ui/modules/ConstantScanner")
-end, function(err)
-    local message
-    if err:find("valid member") then
-        message = "The UI has updated, please rejoin and restart. If you get this message more than once, screenshot this message and report it in the Hydroxide server.\n\n" .. err
-    else
-        message = "Report this error in Hydroxide's server:\n\n" .. err
-    end
+getgenv().touchPoints = {}
+getgenv().touching = {}
+getgenv().conduct = 0
+getgenv().pressHold = false
+getgenv().mainBase = Interface.Base
+mainBase.Active = true
 
-    MessageBox.Show("An error has occurred", message, MessageType.OK, function()
-        Interface:Destroy() 
-    end)
+getgenv().MouseInFrame = function(uiobject)
+    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+    local y_cond = uiobject.AbsolutePosition.Y <= mouse.Y and mouse.Y <= uiobject.AbsolutePosition.Y + uiobject.AbsoluteSize.Y
+    local x_cond = uiobject.AbsolutePosition.X <= mouse.X and mouse.X <= uiobject.AbsolutePosition.X + uiobject.AbsoluteSize.X
+
+    return (y_cond and x_cond)
+end
+
+if signaluis then
+    signaluis:Disconnect()
+end
+
+getgenv().signaluis = UserInput.InputBegan:Connect(function(input, gp)
+    if (input.UserInputType == Enum.UserInputType.Touch) then
+        conduct += 1
+        local key, Signal = conduct, true
+        touchPoints[key] = input.Position
+        local startClock = os.clock()
+        task.spawn(function()
+            local threshold = 0.4
+            repeat task.wait() until (os.clock() - startClock) > threshold or not Signal
+            if (os.clock() - startClock) < threshold then return end
+            pressHold = true
+        end)
+        Signal = UserInput.InputEnded:Connect(function()
+            for i, v in pairs(touching) do
+                if v == true then
+                    -- print(i, v)
+                end
+                touching[i] = false
+            end
+            touchPoints[key] = nil
+            conduct -= 1
+            Signal:Disconnect()
+            Signal = nil
+            task.wait()
+            pressHold = false
+        end)
+    end
 end)
 
 local constants = {
@@ -59,17 +87,17 @@ function oh.getStatus()
     return Status.Text:gsub('• Status: ', '')
 end
 
-local dragging
-local dragStart
-local startPos
+local dragging, dragStart, startPos
 
 Drag.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch and conduct == 0) then
+        local dragEnded
+
         dragging = true
         dragStart = input.Position
         startPos = Base.Position
 
-        local dragEnded = input.Changed:Connect(function()
+        dragEnded = input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
                 dragEnded:Disconnect()
@@ -97,10 +125,10 @@ end)
 
 Interface.Name = HttpService:GenerateGUID(false)
 if getHui then
-    Interface.Parent = getHui()
+    Interface.Parent = CoreGui or getHui()
 else
     if syn then
-        syn.protect_gui(Interface)
+        -- syn.protect_gui(Interface)
     end
 
     Interface.Parent = CoreGui
